@@ -1,5 +1,5 @@
 ## CLAWSRA
-clawsra.sh downloads cloud-hosted AWS SRA sequencing files from an SRA query and converts them to Run Accessions (SRR*), and then pulls and converts the query to fastq.gz with full PHRED scores. It supports SRA queries (e.g., BioProject ID, Project IDs) or direct SRR accession lists and optionally creates swarm files for parallel processing.
+clawsra.sh retrieves sequencing data hosted on AWS by querying the SRA database and identifying Run Accessions (SRR*). It then downloads the corresponding files and converts them to fastq.gz format with full PHRED scores. The script supports both SRA queries (e.g., BioProject IDs, Study IDs) and pre-existing SRR accession lists. Additionally, it can optionally generate swarm files for parallel processing.
 
 ## Usage
 ````
