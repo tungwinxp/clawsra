@@ -9,13 +9,7 @@
 # SRA: SRP526500
 # BioProject: PRJNA1148326
 
-# Download https://github.com/ncbi/sra-tools/wiki/01.-Downloading-SRA-Toolkit
-# Put the folder into your ~/bin/ or wherever you store your bioinformatics software.
-# Navigate into that folder and into the ./bin. Because this is unsigned software
-# Mac will block you from using this.
-
-
-# Install SRA Toolkit
+# Install SRA Toolkit into ~/bin/
 if ! command -v fasterq-dump &> /dev/null; then
     echo "fasterq-dump not found. Installing SRA Toolkit..."
     
@@ -29,7 +23,8 @@ if ! command -v fasterq-dump &> /dev/null; then
     
     cd sratoolkit.${LATEST_VERSION}-mac-arm64/bin
     SRATOOLKIT=$PWD
-    
+
+    # Enable Mac to use unsigned software w/o admin pswd.
     for FILE in *; do
         xattr -d com.apple.quarantine $FILE 2>/dev/null || true
     done
@@ -45,7 +40,7 @@ else
     echo "fasterq-dump is already installed and available."
 fi
 
-# Install AWS CLI
+# Install AWS CLI into ~/bin/
 if ! command -v aws &> /dev/null; then
     echo "AWS CLI not found. Installing..."
     curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
@@ -67,10 +62,10 @@ for SCRIPT in "${SCRIPTS[@]}"; do
     fi
 done
 
-# Export ./bin to PATH if any script is missing
+# Export clawsra's ./bin to PATH if any script is missing
 if [[ $MISSING_SCRIPTS -eq 1 ]]; then
     BIN=$PWD/bin
-    mkdir -p $BIN
+    chmod +x $BIN/*
     
     # Add ./bin to PATH permanently
     echo "export PATH=\$PATH:$BIN" >> ~/.zshrc
@@ -78,7 +73,7 @@ if [[ $MISSING_SCRIPTS -eq 1 ]]; then
     # Add ./bin to PATH for the current session
     export PATH=$PATH:$BIN
 
-    echo "./bin added to PATH. Ensure your scripts are in the ./bin directory."
+    echo "./bin added to PATH. Scripts executable now."
 else
     echo "All required scripts (clawsra.sh, id_srr.sh, pull_srr.sh) are available."
 fi
