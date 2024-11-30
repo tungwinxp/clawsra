@@ -1,8 +1,10 @@
-   ____ _        ___        __             
-  / ___| |      / \ \      / /__ _ __ __ _ 
- | |   | |     / _ \ \ /\ / / __| '__/ _` |
- | |___| |___ / ___ \ V  V /\__ \ | | (_| |
-  \____|_____/_/   \_\_/\_/ |___/_|  \__,_|                                           
+ ██████╗██╗      █████╗ ██╗    ██╗███████╗██████╗  █████╗ 
+██╔════╝██║     ██╔══██╗██║    ██║██╔════╝██╔══██╗██╔══██╗
+██║     ██║     ███████║██║ █╗ ██║███████╗██████╔╝███████║
+██║     ██║     ██╔══██║██║███╗██║╚════██║██╔══██╗██╔══██║
+╚██████╗███████╗██║  ██║╚███╔███╔╝███████║██║  ██║██║  ██║
+ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
+                                                                                                    
 
 ## Overview
 clawsra.sh downloads AWS SRA sequencing files from an SRA query (such as Bioproject) and converts them to fastq.gz with full PHRED scores. It supports SRA queries (e.g., BioProject ID) or direct SRR accession lists and optionally creates swarm files for parallel processing.
