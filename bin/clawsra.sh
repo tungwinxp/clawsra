@@ -5,22 +5,22 @@
 # Task: Pull cloud-based AWS SRA sequencing files and convert them to fastq.gz
 
 # Usage:
-# ./clawsra.sh --sra <SRA Query or SRR Accession List> [--swarm]
+# ./clawsra.sh -s <SRA Query or SRR Accession List> [-w]
 # Flags:
-# --sra <query or file> : (Required) Query to the SRA database (e.g., BioProject ID, Study ID), or a file containing SRR accession numbers.
-# --swarm               : (Optional) Create a swarm file with commands and execute it.
-# --help                : Display this help message.
+# -s <query or file> : (Required) Query to the SRA database (e.g., BioProject ID, Study ID), or a file containing SRR accession numbers.
+# -w                 : (Optional) Create a swarm file with commands and execute it.
+# -h                 : Display this help message.
 
 # Functions
 display_help() {
     echo "clawsra - Pull AWS SRA sequencing files and convert them to fastq.gz"
     echo ""
-    echo "Usage: $0 --sra <SRA Query or SRR Accession List> [--swarm]"
+    echo "Usage: $0 -q <SRA Query or SRR Accession List> [-w]"
     echo ""
     echo "Flags:"
-    echo "  --sra <query or file> : (Required) Query to the SRA database (e.g., BioProject ID, Study ID), or a file containing SRR accession numbers."
-    echo "  --swarm               : (Optional) Create a swarm file with commands and execute it."
-    echo "  --help                : Display this help message."
+    echo "  -q <query or file> : (Required) Query to the SRA database (e.g., BioProject ID, Study ID), or a file containing SRR accession numbers."
+    echo "  -w                 : (Optional) Create a swarm file with commands and execute it."
+    echo "  -h                 : Display this help message."
     exit 0
 }
 
@@ -38,45 +38,50 @@ check_dependencies() {
 SRA_QUERY_OR_FILE=""
 SWARM_FLAG=false
 
-# Parse Arguments
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --sra)
-            shift
-            if [[ $# -gt 0 && ! "$1" =~ ^-- ]]; then
-                SRA_QUERY_OR_FILE="$1"
-                shift
-            else
-                echo "Error: --sra flag requires an argument."
-                exit 1
-            fi
+# Parse Arguments using getopts
+while getopts ":q:wh" opt; do
+    case ${opt} in
+        q )
+            SRA_QUERY_OR_FILE="$OPTARG"
             ;;
-        --swarm)
+        w )
             SWARM_FLAG=true
-            shift
             ;;
-        --help)
+        h )
             display_help
             ;;
-        *)
-            echo "Unknown option $1. Use --help for usage."
+        \? )
+            echo "Invalid Option: -$OPTARG" >&2
+            echo "Use -h for help."
+            exit 1
+            ;;
+        : )
+            echo "Invalid Option: -$OPTARG requires an argument" >&2
+            echo "Use -h for help."
             exit 1
             ;;
     esac
 done
+shift $((OPTIND -1))
 
-# Validate arguments
+# Ensure no positional arguments are provided
+if [[ $# -gt 0 ]]; then
+    echo "Error: Unexpected positional arguments detected. Use flags only. Use -h for help."
+    exit 1
+fi
+
+# Validate required arguments
 if [[ -z "$SRA_QUERY_OR_FILE" ]]; then
-    echo "Error: --sra flag is required. Use --help for usage."
+    echo "Error: -q flag is required. Use -h for help."
     exit 1
 fi
 
 # Determine if SRA_QUERY_OR_FILE is a file or a query
 if [[ -f "$SRA_QUERY_OR_FILE" ]]; then
-    echo "SRR accession list file provided: $SRA_QUERY_OR_FILE" | tee -a script.log
+    echo "SRR accession list file provided: $SRA_QUERY_OR_FILE"
     SRA_LIST_FILE="$SRA_QUERY_OR_FILE"
 else
-    echo "Querying SRA database with: $SRA_QUERY_OR_FILE" | tee -a script.log
+    echo "Querying SRA database with: $SRA_QUERY_OR_FILE"
     sh id_srr.sh "$SRA_QUERY_OR_FILE"
 
     # Define the expected output file for SRR accessions list
@@ -89,7 +94,7 @@ else
     fi
 fi
 
-echo "Processing SRR accession list from: $SRA_LIST_FILE" | tee -a script.log
+echo "Processing SRR accession list from: $SRA_LIST_FILE"
 
 # Check dependencies
 check_dependencies
@@ -99,41 +104,35 @@ if [[ "$SWARM_FLAG" == true ]]; then
     SWARM_FILE="${SRA_QUERY_OR_FILE}_swarm.sh"
 
     # Initialize the swarm file
-    > "$SWARM_FILE"
+    echo "#SWARM --logdir /data/user/swarmlogs" >| "$SWARM_FILE"
 
-    echo "Creating swarm file: $SWARM_FILE" | tee -a script.log
+    echo "Creating swarm file: $SWARM_FILE"
 
     # Append commands to the swarm file
     while IFS= read -r SRR || [[ -n "$SRR" ]]; do
         # Skip empty lines and comments
-        [[ -z "$SRR" || "$SRR" =~ ^# ]] && continue
+        [[ -z "$SRR" ]] && continue
         echo "sh pull_srr.sh $SRR" >> "$SWARM_FILE"
     done < "$SRA_LIST_FILE"
 
-    echo "Swarm file created successfully: $SWARM_FILE" | tee -a script.log
+    echo "Swarm file created successfully: $SWARM_FILE"
 
     # Execute the swarm file with additional options and logging
-    echo "Executing swarm with $SWARM_FILE..." | tee -a script.log
-    swarm -f "$SWARM_FILE" --time=24:00:00 --mem=4G --jobs=10 &> swarm_execution.log
+    echo "Executing swarm with $SWARM_FILE..."
+    swarm -f "$SWARM_FILE" --time=24:00:00
     SWARM_EXIT_CODE=$?
 
-    if [[ $SWARM_EXIT_CODE -ne 0 ]]; then
-        echo "Swarm execution failed with exit code $SWARM_EXIT_CODE. Check swarm_execution.log for details." | tee -a script.log
-        exit 1
-    else
-        echo "Swarm execution completed successfully." | tee -a script.log
-    fi
 else
-    echo "Executing commands directly..." | tee -a script.log
+    echo "Executing commands directly..."
     while IFS= read -r SRR || [[ -n "$SRR" ]]; do
         # Skip empty lines and comments
-        [[ -z "$SRR" || "$SRR" =~ ^# ]] && continue
+        [[ -z "$SRR" ]] && continue
         sh pull_srr.sh "$SRR"
         if [[ $? -ne 0 ]]; then
-            echo "Error executing pull_srr.sh for SRR: $SRR" | tee -a script.log
+            echo "Error executing pull_srr.sh for SRR: $SRR"
             # Uncomment the next line if you want the script to exit on error
             # exit 1
         fi
     done < "$SRA_LIST_FILE"
-    echo "All commands executed successfully." | tee -a script.log
+    echo "All commands executed successfully."
 fi
