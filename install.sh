@@ -1,39 +1,61 @@
 #!/bin/bash
 
 # Tung Nguyen
-# November 28 2024
+# December 1, 2024
 # HOW TO DOWNLOAD SRA TO FASTQs WITH FULL PHRED SCORES
 # WITH MINIMAL INSTALL SOFTWARE AND NO LOGIN
 
-## EXAMPLE ##
-# SRA: SRP526500
-# BioProject: PRJNA1148326
+# Determine the shell configuration file
+if [[ $SHELL == */zsh ]]; then
+    SHELL_RC=~/.zshrc
+elif [[ $SHELL == */bash ]]; then
+    SHELL_RC=~/.bashrc
+else
+    echo "Unsupported shell. Please use Bash or Zsh."
+    exit 1
+fi
 
-# Install SRA Toolkit into ~/bin/
+# Detect OS and select appropriate SRA Toolkit
+echo "Detecting OS..."
+if [[ "$(uname)" == "Darwin" ]]; then
+    OS="mac"
+    ARCH="mac-arm64"
+elif [[ "$(uname -s)" == "Linux" ]]; then
+    OS="linux"
+    DISTRO=$(grep -Ei 'ubuntu|debian' /etc/os-release && echo "ubuntu" || echo "centos")
+    ARCH="ubuntu64"
+    [[ $DISTRO == "centos" ]] && ARCH="centos_linux64"
+else
+    echo "Unsupported OS. This script supports macOS and Linux."
+    exit 1
+fi
+
+# Install SRA Toolkit
+CLAWSRA_DIR=$PWD
 if ! command -v fasterq-dump &> /dev/null; then
     echo "fasterq-dump not found. Installing SRA Toolkit..."
-    
-    BIN=~/bin
+    BIN=~/bin/
     mkdir -p $BIN
     cd $BIN
-    
-    LATEST_VERSION=$(curl -s https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/ | grep -oE '[0-9.]+/' | tail -n 1 | tr -d '/')
-    curl -O https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/$LATEST_VERSION/sratoolkit.${LATEST_VERSION}-mac-arm64.tar.gz
-    tar -xzf sratoolkit.${LATEST_VERSION}-mac-arm64.tar.gz
-    
-    cd sratoolkit.${LATEST_VERSION}-mac-arm64/bin
-    SRATOOLKIT=$PWD
 
-    # Enable Mac to use unsigned software w/o admin pswd.
-    for FILE in *; do
-        xattr -d com.apple.quarantine $FILE 2>/dev/null || true
-    done
+    LATEST_VERSION=$(curl -s https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/ | grep -oE '[0-9.]+/' | tail -n 1 | tr -d '/')
+    curl -O https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${LATEST_VERSION}/sratoolkit.${LATEST_VERSION}-${ARCH}.tar.gz
+    tar -xzf sratoolkit.${LATEST_VERSION}-${ARCH}.tar.gz
     
+    SRATOOLKIT=$(find . -type d -name "sratoolkit.*-${ARCH}")/bin
+
+    # Enable macOS to use unsigned software w/o admin password
+    if [[ "$OS" == "mac" ]]; then
+        for FILE in $SRATOOLKIT/*; do
+            xattr -d com.apple.quarantine $FILE 2>/dev/null || true
+        done
+    fi
+
     # Add SRA Toolkit to PATH permanently
-    echo "export PATH=\$PATH:$SRATOOLKIT" >> ~/.zshrc
+    echo "export PATH=\$PATH:$SRATOOLKIT/" >> $SHELL_RC
     
     # Add SRA Toolkit to PATH for the current session
-    export PATH=$PATH:$SRATOOLKIT
+    export PATH=$PATH:$SRATOOLKIT/
 
     echo "SRA Toolkit installed and added to PATH."
 else
@@ -54,6 +76,7 @@ fi
 # Check for clawsra.sh, id_srr.sh, and pull_srr.sh
 SCRIPTS=("clawsra.sh" "id_srr.sh" "pull_srr.sh")
 MISSING_SCRIPTS=0
+cd $CLAWSRA_DIR
 
 for SCRIPT in "${SCRIPTS[@]}"; do
     if ! command -v $SCRIPT &> /dev/null; then
@@ -64,16 +87,16 @@ done
 
 # Export clawsra's ./bin to PATH if any script is missing
 if [[ $MISSING_SCRIPTS -eq 1 ]]; then
-    BIN=$PWD/bin
+    BIN=$CLAWSRA_DIR/bin/
     chmod +x $BIN/*
     
     # Add ./bin to PATH permanently
-    echo "export PATH=\$PATH:$BIN" >> ~/.zshrc
+    echo "export PATH=\$PATH:$BIN/" >> $SHELL_RC
     
     # Add ./bin to PATH for the current session
-    export PATH=$PATH:$BIN
+    export PATH=$PATH:$BIN/
 
-    echo "./bin added to PATH. Scripts executable now."
+    echo "./bin added to PATH. Scripts are now executable."
 else
     echo "All required scripts (clawsra.sh, id_srr.sh, pull_srr.sh) are available."
 fi
