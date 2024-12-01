@@ -42,7 +42,7 @@ if ! command -v fasterq-dump &> /dev/null; then
     curl -O https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${LATEST_VERSION}/sratoolkit.${LATEST_VERSION}-${ARCH}.tar.gz
     tar -xzf sratoolkit.${LATEST_VERSION}-${ARCH}.tar.gz
     
-    SRATOOLKIT=$(find . -type d -name "sratoolkit.*-${ARCH}")/bin
+    SRATOOLKIT=$(find $PWD -type d -name "sratoolkit.*-${ARCH}")/bin
 
     # Enable macOS to use unsigned software w/o admin password
     if [[ "$OS" == "mac" ]]; then
