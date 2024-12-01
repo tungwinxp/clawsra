@@ -18,7 +18,11 @@ mkdir -p tmp_aws/ fastq/
 aws s3 sync s3://sra-pub-run-odp/sra/$file tmp_aws/$file --no-sign-request && \
 echo "$file downloaded successfully."
 
-fasterq-dump --split-files tmp_aws/$file/$file -O fastq/ && \
-rm -rf tmp_aws/$file && \
-gzip fastq/$file_*.fastq && \
-echo "$file fastq processed successfully."
+# fasterq-dump --split-files tmp_aws/$file/$file -O fastq/ && \
+# rm -rf tmp_aws/$file && \
+# gzip fastq/$file_*.fastq && \
+# echo "$file fastq processed successfully."
+
+time fastq-dump --gzip --skip-technical --readids #--read-filter pass \
+	--dumpbase --split-files --clip --outdir fastq/ tmp_aws/$file/$file && rm -rf tmp_aws/$file && touch fastq/$file.done
+
