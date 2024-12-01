@@ -23,6 +23,6 @@ echo "$file downloaded successfully."
 # gzip fastq/$file_*.fastq && \
 # echo "$file fastq processed successfully."
 
-time fastq-dump --gzip --skip-technical --readids #--read-filter pass \
-	--dumpbase --split-files --clip --outdir fastq/ tmp_aws/$file/$file && rm -rf tmp_aws/$file && touch fastq/$file.done
+time fastq-dump --gzip --skip-technical --readids #--read-filter pass --clip \
+	--dumpbase --split-files --outdir fastq/ tmp_aws/$file/$file && rm -rf tmp_aws/$file && touch fastq/$file.done
 
