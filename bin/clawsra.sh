@@ -82,26 +82,25 @@ fi
 
 echo "Processing SRR accession list from: $SRA_LIST_FILE"
 
-if [[ -n "$SWARM_FILE" ]]; then
-    echo "Creating swarm file: $SWARM_FILE"
-    > "$SWARM_FILE" # Clear or create the swarm file
-fi
-
-# Process each SRR in the list file
-while IFS= read -r SRR; do
-    COMMAND="sh pull_srr.sh $SRR"
-    if [[ -n "$SWARM_FILE" ]]; then
+# Check if $SWARM_FILE variable is set and the file exists
+if [[ -n "$SWARM_FILE" && -f "$SWARM_FILE" ]]; then
+    echo "Appending commands to $SWARM_FILE..."
+    for SRR in $(cat "$SWARM_FILE"); do
+        COMMAND="sh pull_srr.sh $SRR"
         echo "$COMMAND" >> "$SWARM_FILE"
-    else
-        echo "Running: $COMMAND"
+    done
+else
+    echo "Executing commands directly..."
+    for SRR in $(cat "$SWARM_FILE"); do
+        COMMAND="sh pull_srr.sh $SRR"
         eval "$COMMAND"
-    fi
-done < "$SRA_LIST_FILE"
+    done
+fi
 
 # Swarm the file if the --swarm flag is used
 if [[ -n "$SWARM_FILE" ]]; then
     echo "Swarming file: $SWARM_FILE"
-    swarm -f "$SWARM_FILE"
+    swarm "$SWARM_FILE"
 fi
 
 echo "Done."
