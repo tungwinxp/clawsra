@@ -100,3 +100,6 @@ if [[ $MISSING_SCRIPTS -eq 1 ]]; then
 else
     echo "All required scripts (clawsra.sh, id_srr.sh, pull_srr.sh) are available."
 fi
+
+# making sure the software can run
+source $SHELL_RC
