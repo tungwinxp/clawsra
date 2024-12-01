@@ -36,14 +36,15 @@ check_dependencies() {
 
 # Parse Arguments
 SRA_QUERY_OR_FILE=""
-SWARM_FILE=""
+SWARM_FLAG=false
+
 while [[ $# -gt 0 ]]; do
     case $1 in
         --sra)
             SRA_QUERY_OR_FILE="$2"
             shift 2 ;;
         --swarm)
-            SWARM_FILE="$2"
+            SWARM_FLAG=true
             shift 2 ;;
         --help)
             display_help ;;
@@ -83,24 +84,20 @@ fi
 echo "Processing SRR accession list from: $SRA_LIST_FILE"
 
 # Check if $SWARM_FILE variable is set and the file exists
-if [[ -n "$SWARM_FILE" && -f "$SWARM_FILE" ]]; then
+if [[ "$SWARM_FLAG" == true ]]; then
+    SWARM_FILE=${SRA}.swarm
+    rm $SWARM_FILE; touch
     echo "Appending commands to $SWARM_FILE..."
-    for SRR in $(cat "$SWARM_FILE"); do
+    for SRR in $(cat "$SRA_LIST_FILE"); do
         COMMAND="sh pull_srr.sh $SRR"
         echo "$COMMAND" >> "$SWARM_FILE"
     done
+    echo "Swarming file: $SWARM_FILE"
+    swarm "$SWARM_FILE"
 else
     echo "Executing commands directly..."
-    for SRR in $(cat "$SWARM_FILE"); do
+    for SRR in $(cat "$SRA_LIST_FILE"); do
         COMMAND="sh pull_srr.sh $SRR"
         eval "$COMMAND"
     done
 fi
-
-# Swarm the file if the --swarm flag is used
-if [[ -n "$SWARM_FILE" ]]; then
-    echo "Swarming file: $SWARM_FILE"
-    swarm "$SWARM_FILE"
-fi
-
-echo "Done."
