@@ -3,7 +3,7 @@ clawsra.sh retrieves sequencing data hosted on AWS by querying the SRA database 
 
 ## Usage
 ````
-clawsra.sh --sra <SRA Query or SRR Accession List> [--swarm <swarm_file>] [--help]
+clawsra.sh -q <SRA Query or SRR Accession List> [--swarm <swarm_file>] [--help]
 ````
 
 ### Flags
@@ -20,17 +20,17 @@ It will try to ensure id_srr.sh and pull_srr.sh are in your PATH. For issues, ch
 ### Examples
 #### Download using BioProject ID:
 ````
-clawsra.sh --sra PRJNA123456
+clawsra.sh -q PRJNA123456
 ````
 
 #### Download using SRR list file:
 ````
-clawsra.sh --sra my_srr_list.txt
+clawsra.sh -q my_srr_list.txt
 ````
 
 #### Create and execute a swarm file (for SLURM cluster to run in parallel jobs):
 ````
-clawsra.sh --sra SRP123456 --swarm my_swarm_file.swarm
+clawsra.sh -q SRP123456 --swarm my_swarm_file.swarm
 ````
 
 
