@@ -136,3 +136,10 @@ else
     done < "$SRA_LIST_FILE"
     echo "All commands executed successfully."
 fi
+
+# TO DO:
+# get the LOGAN contig or unitig
+# compression
+# stream in faster-qdump.
+# don't store fastq just start alignment, detect paired end on the correct reference. 
+# have a minimap reference, get BAM files and store those for downstream.
