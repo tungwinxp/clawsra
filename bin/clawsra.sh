@@ -137,6 +137,11 @@ else
     echo "All commands executed successfully."
 fi
 
+#cat accessions.txt | xargs -I{} aws s3 cp s3://logan-pub/u/{}/{}.unitigs.fa.zst . --no-sign-request
+#cat accessions.txt | xargs -I{} aws s3 cp s3://logan-pub/c/{}/{}.contigs.fa.zst . --no-sign-request
+#aws s3 cp s3://logan-pub/u/SRR25698020/SRR25698020.unitigs.fa.zst . --no-sign-request
+
+
 # TO DO:
 # get the LOGAN contig or unitig
 # compression
