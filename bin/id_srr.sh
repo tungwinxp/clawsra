@@ -30,7 +30,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Extract the raw Run IDs from the XML file
-${SRA}_RunInfo.xml | grep \<Run\> | grep "<Run>" | sed 's/.*<Run>\(.*\)<\/Run>.*/\1/' >| $OUTPUT_FILE
+grep \<Run\> ${SRA}_RunInfo.xml | grep "<Run>" | sed 's/.*<Run>\(.*\)<\/Run>.*/\1/' >| $OUTPUT_FILE
 
 
 # Validate output
